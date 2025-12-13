@@ -75,6 +75,17 @@ Every card must define two exports:
 - default: the card
 - upgrade: upgrade(card) => card
 
+To create a new card it, must have two exports
+
+- it must exist in `src/content/cards/
+- it must have a default export with the card object
+- it must have export an `upgrade` function
+
+See for example `src/content/cards/strike.js`. Then:
+
+- Register the card in `src/content/cards.js` by adding the filename (without `.js`) to `cardIndex`
+- If the card uses custom actions, add them to `src/game/actions.js` and register in `allActions`
+
 #### dungeons.js
 
 Contains different monsters, room and dungeons. All created with methods from the game.
@@ -111,10 +122,13 @@ See [sounds.js](src/ui/sounds.js) using the Web Audio API.
 
 - Console commands available via window.stw
 - URL parameters for debugging:
-  - ?debug: Skips splash screen
-  - ?tutorial: Enables tutorial
-  - ?iddqd: God mode
+  - `?debug`: Skips splash screen, enables free map navigation
+  - `?tutorial`: Enables tutorial
+  - `?iddqd`: God mode (kills all monsters)
+  - `?hand=Card Name,Card Name`: Adds specific cards to your starting hand
   - Game state can be saved to URL hash
+
+Example: `/?debug&hand=Strike, Iron Wave, Icon Wave` starts a game with those cards in hand.
 
 ## Backend
 

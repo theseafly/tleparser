@@ -88,6 +88,23 @@ export default class App extends Component {
 			setTimeout(startTutorial, 800)
 		}
 
+		// Add specific cards to hand via URL param: ?hand=Strike,Iron Wave
+		if (urlParams.has('hand')) {
+			const cardNames = urlParams
+				.get('hand')
+				.split(',')
+				.map((s) => s.trim())
+			for (const name of cardNames) {
+				try {
+					const card = createCard(name)
+					this.game.enqueue({type: 'addCardToHand', card})
+					this.game.dequeue()
+				} catch (e) {
+					console.warn(`Could not add card "${name}" to hand:`, e.message)
+				}
+			}
+		}
+
 		this.setState(game.state, this.dealCards)
 		sounds.startGame()
 
@@ -208,6 +225,7 @@ export default class App extends Component {
 		this.base.appendChild(clone)
 
 		// Update state and re-enable dragdrop
+		const cardIdsBefore = new Set(this.state.hand.map((c) => c.id))
 		this.update(() => {
 			enableDragDrop(this.base, this.playCard)
 			sounds.playCard({card})
@@ -217,13 +235,44 @@ export default class App extends Component {
 				clone.parentNode.removeChild(clone)
 			})
 
-			// Reposition hand
+			// Reposition existing cards
 			if (supportsFlip) {
 				Flip.from(flip, {
 					duration: 0.3,
 					ease: 'power3.inOut',
 					absolute: true,
 				})
+			}
+
+			// Animate newly added cards (from card actions like addCardsToHand)
+			const handSize = this.game.state.hand.length
+			const newCards = this.game.state.hand
+				.map((c, i) => ({card: c, handIndex: i}))
+				.filter(({card}) => !cardIdsBefore.has(card.id))
+			if (newCards.length) {
+				const newCardEls = newCards
+					.map(({card, handIndex}) => ({
+						el: this.base.querySelector(`.Hand .Card[data-id="${card.id}"]`),
+						handIndex,
+					}))
+					.filter(({el}) => el)
+				if (newCardEls.length) {
+					// Animate each card with rotation based on actual hand position
+					newCardEls.forEach(({el, handIndex}, i) => {
+						const x = window.innerWidth
+						const centerOffset = handIndex - Math.floor(handSize / 2)
+						gsap.set(el, {rotation: -25, x: -x, y: 100, scale: 0.5, opacity: 1})
+						gsap.to(el, {
+							duration: 0.4,
+							delay: 0.1 + i * 0.1,
+							scale: 1,
+							x: 0,
+							y: centerOffset * centerOffset * 5,
+							rotation: centerOffset * 2,
+							ease: 'back.out(0.3)',
+						})
+					})
+				}
 			}
 		})
 	}
