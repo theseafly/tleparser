@@ -3,6 +3,8 @@ import preact from '@astrojs/preact'
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://theseafly.github.io',
+    base: '/tleparser',
 	srcDir: './src/ui',
 	vite: {
 		build: {
